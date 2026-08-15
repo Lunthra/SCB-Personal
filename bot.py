@@ -7,8 +7,10 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 # The thread where media-only rules apply
+
 MEDIA_THREAD_IDS = {
-    1538218357508153455
+    1538146295489761331,
+    1538183584102481932
 }
 
 intents = discord.Intents.default()
