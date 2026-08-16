@@ -343,68 +343,6 @@ async def media_threads(ctx: commands.Context):
 
 
 # ============================================================
-# PIN MESSAGE
-# ============================================================
-
-@bot.hybrid_command(
-    name="pin",
-    description="Pin the message you are replying to."
-)
-@commands.has_permissions(manage_messages=True)
-@commands.guild_only()
-async def pin(ctx: commands.Context):
-
-    if ctx.guild is None or ctx.guild.id != GUILD_ID:
-        return
-
-    # Must be used as a reply to another message.
-    if not ctx.message or not ctx.message.reference:
-        await ctx.send(
-            "❌ Reply to a message with `!!pin` to pin it.",
-            ephemeral=True
-        )
-        return
-
-    try:
-
-        message_id = ctx.message.reference.message_id
-
-        target_message = await ctx.channel.fetch_message(
-            message_id
-        )
-
-        await target_message.pin(
-            reason=f"Pinned by {ctx.author}"
-        )
-
-        await ctx.send(
-            "📌 Message pinned!",
-            ephemeral=True
-        )
-
-    except discord.Forbidden:
-
-        await ctx.send(
-            "❌ I don't have permission to pin messages here.",
-            ephemeral=True
-        )
-
-    except discord.NotFound:
-
-        await ctx.send(
-            "❌ I couldn't find that message.",
-            ephemeral=True
-        )
-
-    except discord.HTTPException as e:
-
-        await ctx.send(
-            f"❌ Failed to pin the message: `{e}`",
-            ephemeral=True
-        )
-
-
-# ============================================================
 # MEDIA-ONLY MESSAGE SYSTEM
 # ============================================================
 
@@ -413,6 +351,72 @@ async def on_message(message: discord.Message):
 
     # Ignore bots.
     if message.author.bot:
+        return
+
+    # --------------------------------------------------------
+    # PIN MESSAGE
+    # --------------------------------------------------------
+
+    # If the message is exactly "pin" and is a reply,
+    # pin the message being replied to.
+    if message.content.lower().strip() == "pin":
+
+        # Make sure it is being used in your server.
+        if message.guild is None:
+            return
+
+        if message.guild.id != GUILD_ID:
+            return
+
+        # User must have Manage Messages permission.
+        if not message.author.guild_permissions.manage_messages:
+            await message.reply(
+                "❌ You need **Manage Messages** permission "
+                "to pin messages."
+            )
+            return
+
+        # Must be a reply to another message.
+        if not message.reference:
+            await message.reply(
+                "❌ Reply to a message with `pin` to pin it."
+            )
+            return
+
+        try:
+
+            message_id = message.reference.message_id
+
+            target_message = await message.channel.fetch_message(
+                message_id
+            )
+
+            await target_message.pin(
+                reason=f"Pinned by {message.author}"
+            )
+
+            await message.reply(
+                "📌 Message pinned!"
+            )
+
+        except discord.Forbidden:
+
+            await message.reply(
+                "❌ I don't have permission to pin messages here."
+            )
+
+        except discord.NotFound:
+
+            await message.reply(
+                "❌ I couldn't find that message."
+            )
+
+        except discord.HTTPException as e:
+
+            await message.reply(
+                f"❌ Failed to pin the message: `{e}`"
+            )
+
         return
 
     # --------------------------------------------------------
