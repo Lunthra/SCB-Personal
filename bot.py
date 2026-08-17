@@ -1,5 +1,4 @@
 import os
-import re
 import sqlite3
 
 import discord
@@ -15,15 +14,18 @@ load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
+# Your Discord server ID
 GUILD_ID = 1459779308884197588
 
+# Prefix commands
 PREFIX = "!!"
 
-DATABASE_FILE = "media_threads.db"
+# SQLite database
+DB_FILE = "media_threads.db"
 
-
-# Existing media threads
-DEFAULT_MEDIA_THREAD_IDS = {
+# These are your currently registered threads.
+# They are inserted only when the database is completely new.
+INITIAL_MEDIA_THREAD_IDS = {
     1538146295489761331,
     1538183584102481932,
 }
@@ -33,64 +35,113 @@ DEFAULT_MEDIA_THREAD_IDS = {
 # DATABASE
 # ============================================================
 
-def get_db():
-    return sqlite3.connect(DATABASE_FILE)
-
-
 def setup_database():
-    with get_db() as db:
-        db.execute("""
+    """Create the database and seed the initial threads once."""
+
+    with sqlite3.connect(DB_FILE) as connection:
+
+        connection.execute("""
             CREATE TABLE IF NOT EXISTS media_threads (
                 thread_id INTEGER PRIMARY KEY
             )
         """)
 
-        for thread_id in DEFAULT_MEDIA_THREAD_IDS:
-            db.execute(
-                "INSERT OR IGNORE INTO media_threads (thread_id) VALUES (?)",
-                (thread_id,)
-            )
+        # Check whether the table is empty.
+        count = connection.execute(
+            "SELECT COUNT(*) FROM media_threads"
+        ).fetchone()[0]
 
-        db.commit()
+        # Only add the initial threads to a brand-new/empty database.
+        if count == 0:
+            for thread_id in INITIAL_MEDIA_THREAD_IDS:
+                connection.execute(
+                    """
+                    INSERT OR IGNORE INTO media_threads (thread_id)
+                    VALUES (?)
+                    """,
+                    (thread_id,)
+                )
+
+        connection.commit()
 
 
-def get_media_thread_ids():
-    with get_db() as db:
-        rows = db.execute(
-            "SELECT thread_id FROM media_threads"
+def is_media_thread(thread_id):
+    """Check whether a thread is registered as a media-only thread."""
+
+    with sqlite3.connect(DB_FILE) as connection:
+
+        result = connection.execute(
+            """
+            SELECT 1
+            FROM media_threads
+            WHERE thread_id = ?
+            """,
+            (thread_id,)
+        ).fetchone()
+
+    return result is not None
+
+
+def register_media_thread(thread_id):
+    """Register a thread as a media-only thread."""
+
+    with sqlite3.connect(DB_FILE) as connection:
+
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO media_threads (thread_id)
+            VALUES (?)
+            """,
+            (thread_id,)
+        )
+
+        connection.commit()
+
+
+def unregister_media_thread(thread_id):
+    """Remove a thread from the media-only list."""
+
+    with sqlite3.connect(DB_FILE) as connection:
+
+        cursor = connection.execute(
+            """
+            DELETE FROM media_threads
+            WHERE thread_id = ?
+            """,
+            (thread_id,)
+        )
+
+        connection.commit()
+
+    return cursor.rowcount > 0
+
+
+def get_media_threads():
+    """Return all registered media thread IDs."""
+
+    with sqlite3.connect(DB_FILE) as connection:
+
+        rows = connection.execute(
+            """
+            SELECT thread_id
+            FROM media_threads
+            ORDER BY thread_id
+            """
         ).fetchall()
 
-    return {row[0] for row in rows}
-
-
-def add_media_thread(thread_id):
-    with get_db() as db:
-        db.execute(
-            "INSERT OR IGNORE INTO media_threads (thread_id) VALUES (?)",
-            (thread_id,)
-        )
-        db.commit()
-
-
-def remove_media_thread(thread_id):
-    with get_db() as db:
-        db.execute(
-            "DELETE FROM media_threads WHERE thread_id = ?",
-            (thread_id,)
-        )
-        db.commit()
+    return [row[0] for row in rows]
 
 
 # ============================================================
-# BOT SETUP
+# BOT
 # ============================================================
 
 intents = discord.Intents.default()
 
-# Required so the bot can read normal messages such as:
-# pin
-# unpin
-# !!register_media
+# Required for:
+# - prefix commands
+# - reading message content
+# - media-only message handling
 intents.message_content = True
 
 bot = commands.Bot(
@@ -101,7 +152,25 @@ bot = commands.Bot(
 
 
 # ============================================================
-# STARTUP
+# SLASH COMMAND SYNC
+# ============================================================
+
+@bot.event
+async def setup_hook():
+
+    guild = discord.Object(id=GUILD_ID)
+
+    # Copy hybrid commands to this specific server.
+    bot.tree.copy_global_to(guild=guild)
+
+    # Sync slash commands.
+    await bot.tree.sync(guild=guild)
+
+    print("Slash commands synced.")
+
+
+# ============================================================
+# READY
 # ============================================================
 
 @bot.event
@@ -110,167 +179,353 @@ async def on_ready():
     print(f"Logged in as {bot.user}")
     print("SCB Personal is online!")
 
-    # Sync slash commands only to your server
-    guild = discord.Object(id=GUILD_ID)
-
-    try:
-        synced = await bot.tree.sync(guild=guild)
-        print(f"Synced {len(synced)} slash command(s).")
-
-    except Exception as e:
-        print(f"Failed to sync slash commands: {e}")
+    print(
+        f"Registered media threads: "
+        f"{len(get_media_threads())}"
+    )
 
 
 # ============================================================
-# PIN / UNPIN
+# REGISTER MEDIA THREAD
 # ============================================================
 
-async def handle_pin_command(message):
+@bot.hybrid_command(
+    name="register-media",
+    description="Register the current thread as a media-only thread."
+)
+@commands.has_permissions(manage_messages=True)
+@commands.guild_only()
+async def register_media(ctx: commands.Context):
 
-    # Ignore anything that isn't exactly:
-    #
-    # pin
-    # unpin
-    #
-    content = message.content.lower().strip()
+    # Make sure the command is being used in your server.
+    if ctx.guild is None or ctx.guild.id != GUILD_ID:
+        return
 
-    if content not in {"pin", "unpin"}:
-        return False
+    channel = ctx.channel
 
-    # It must be a reply to another message
-    if not message.reference:
-        return False
+    # Must be used inside a thread.
+    if not isinstance(channel, discord.Thread):
 
-    # Only allow users who can manage messages
-    if not message.author.guild_permissions.manage_messages:
-        return False
+        await ctx.send(
+            "❌ This command must be used inside a thread.",
+            ephemeral=True
+        )
+
+        return
+
+    thread_id = channel.id
+
+    # Already registered.
+    if is_media_thread(thread_id):
+
+        await ctx.send(
+            "ℹ️ This thread is already registered as a "
+            "media-only thread.",
+            ephemeral=True
+        )
+
+        return
+
+    # Register.
+    register_media_thread(thread_id)
+
+    await ctx.send(
+        f"✅ **{channel.name}** is now a media-only thread.\n"
+        f"Thread ID: `{thread_id}`",
+        ephemeral=True
+    )
+
+    print(
+        f"Registered media thread: "
+        f"{channel.name} ({thread_id})"
+    )
+
+
+# ============================================================
+# UNREGISTER MEDIA THREAD
+# ============================================================
+
+@bot.hybrid_command(
+    name="unregister-media",
+    description="Remove the current thread from the media-only list."
+)
+@commands.has_permissions(manage_messages=True)
+@commands.guild_only()
+async def unregister_media(ctx: commands.Context):
+
+    if ctx.guild is None or ctx.guild.id != GUILD_ID:
+        return
+
+    channel = ctx.channel
+
+    # Must be used inside a thread.
+    if not isinstance(channel, discord.Thread):
+
+        await ctx.send(
+            "❌ This command must be used inside a thread.",
+            ephemeral=True
+        )
+
+        return
+
+    thread_id = channel.id
+
+    removed = unregister_media_thread(thread_id)
+
+    if not removed:
+
+        await ctx.send(
+            "ℹ️ This thread isn't registered as a "
+            "media-only thread.",
+            ephemeral=True
+        )
+
+        return
+
+    await ctx.send(
+        f"✅ **{channel.name}** is no longer a "
+        "media-only thread.",
+        ephemeral=True
+    )
+
+    print(
+        f"Unregistered media thread: "
+        f"{channel.name} ({thread_id})"
+    )
+
+
+# ============================================================
+# LIST MEDIA THREADS
+# ============================================================
+
+@bot.hybrid_command(
+    name="media-threads",
+    description="Show all registered media-only threads."
+)
+@commands.has_permissions(manage_messages=True)
+@commands.guild_only()
+async def media_threads(ctx: commands.Context):
+
+    if ctx.guild is None or ctx.guild.id != GUILD_ID:
+        return
+
+    thread_ids = get_media_threads()
+
+    if not thread_ids:
+
+        await ctx.send(
+            "📭 No media-only threads are currently registered.",
+            ephemeral=True
+        )
+
+        return
+
+    lines = []
+
+    for thread_id in thread_ids:
+
+        channel = bot.get_channel(thread_id)
+
+        if channel:
+
+            lines.append(
+                f"• {channel.mention} — `{thread_id}`"
+            )
+
+        else:
+
+            lines.append(
+                f"• <#{thread_id}> — `{thread_id}`"
+            )
+
+    await ctx.send(
+        "**📸 Registered Media Threads**\n\n"
+        + "\n".join(lines),
+        ephemeral=True
+    )
+
+
+# ============================================================
+# PIN / UNPIN MESSAGE
+# ============================================================
+
+@bot.hybrid_command(
+    name="pin",
+    description="Pin or unpin the message you are replying to."
+)
+@commands.has_permissions(manage_messages=True)
+@commands.guild_only()
+async def pin(ctx: commands.Context):
+
+    if ctx.guild is None or ctx.guild.id != GUILD_ID:
+        return
+
+    # Must be used as a reply to another message.
+    if not ctx.message or not ctx.message.reference:
+
+        if ctx.interaction:
+            await ctx.send(
+                "❌ Reply to a message with `/pin` to pin or unpin it.",
+                ephemeral=True
+            )
+        else:
+            await ctx.send(
+                "❌ Reply to a message with `!!pin` to pin or unpin it."
+            )
+
+        return
 
     try:
 
-        message_id = message.reference.message_id
+        message_id = ctx.message.reference.message_id
 
-        if message_id is None:
-            return False
-
-        target_message = await message.channel.fetch_message(
+        target_message = await ctx.channel.fetch_message(
             message_id
         )
 
-        # ----------------------------
-        # PIN
-        # ----------------------------
+        # ----------------------------------------------------
+        # ALREADY PINNED → UNPIN
+        # ----------------------------------------------------
 
-        if content == "pin":
-
-            await target_message.pin(
-                reason=f"Pinned by {message.author}"
-            )
-
-            await message.delete()
-
-            print(
-                f"Pinnned message {target_message.id} "
-                f"by {message.author}"
-            )
-
-            return True
-
-        # ----------------------------
-        # UNPIN
-        # ----------------------------
-
-        if content == "unpin":
+        if target_message.pinned:
 
             await target_message.unpin(
-                reason=f"Unpinned by {message.author}"
+                reason=f"Unpinned by {ctx.author}"
             )
 
-            await message.delete()
+            if ctx.interaction:
+                await ctx.send(
+                    "📌 Message unpinned!",
+                    ephemeral=True
+                )
+            else:
+                await ctx.send(
+                    "📌 Message unpinned!"
+                )
 
             print(
                 f"Unpinned message {target_message.id} "
-                f"by {message.author}"
+                f"by {ctx.author} "
+                f"in {ctx.channel}"
             )
 
-            return True
+        # ----------------------------------------------------
+        # NOT PINNED → PIN
+        # ----------------------------------------------------
+
+        else:
+
+            await target_message.pin(
+                reason=f"Pinned by {ctx.author}"
+            )
+
+            if ctx.interaction:
+                await ctx.send(
+                    "📌 Message pinned!",
+                    ephemeral=True
+                )
+            else:
+                await ctx.send(
+                    "📌 Message pinned!"
+                )
+
+            print(
+                f"Pinned message {target_message.id} "
+                f"by {ctx.author} "
+                f"in {ctx.channel}"
+            )
 
     except discord.Forbidden:
 
-        print(
-            "ERROR: I don't have permission to pin/unpin "
-            "messages in this channel."
-        )
+        if ctx.interaction:
+            await ctx.send(
+                "❌ I don't have permission to pin or unpin messages here.",
+                ephemeral=True
+            )
+        else:
+            await ctx.send(
+                "❌ I don't have permission to pin or unpin messages here."
+            )
 
     except discord.NotFound:
 
-        print("ERROR: The target message was not found.")
+        if ctx.interaction:
+            await ctx.send(
+                "❌ I couldn't find that message.",
+                ephemeral=True
+            )
+        else:
+            await ctx.send(
+                "❌ I couldn't find that message."
+            )
 
     except discord.HTTPException as e:
 
-        print(
-            f"ERROR: Discord failed to pin/unpin the message: {e}"
-        )
-
-    return True
+        if ctx.interaction:
+            await ctx.send(
+                f"❌ Failed to pin/unpin the message: `{e}`",
+                ephemeral=True
+            )
+        else:
+            await ctx.send(
+                f"❌ Failed to pin/unpin the message: `{e}`"
+            )
 
 
 # ============================================================
-# MESSAGE EVENT
+# MEDIA-ONLY MESSAGE SYSTEM
 # ============================================================
 
 @bot.event
-async def on_message(message):
+async def on_message(message: discord.Message):
 
-    # Ignore bot messages
+    # Ignore bots.
     if message.author.bot:
         return
 
     # --------------------------------------------------------
-    # PIN / UNPIN
+    # PREFIX COMMANDS
     # --------------------------------------------------------
 
-    # This works anywhere in the server.
-    #
-    # Reply to a message:
-    #
-    # pin
-    #
-    # or:
-    #
-    # unpin
-    #
-    # No prefix required.
-
-    pin_handled = await handle_pin_command(message)
-
-    if pin_handled:
-        return
-
-    # --------------------------------------------------------
-    # NORMAL COMMANDS
-    # --------------------------------------------------------
-
-    # Important:
-    # Since we override on_message, we must manually process
-    # normal commands.
+    # Always allow the command system to process the message.
+    # This is important because we override on_message.
     await bot.process_commands(message)
 
-
     # --------------------------------------------------------
-    # MEDIA THREAD SYSTEM
+    # ONLY OUR SERVER
     # --------------------------------------------------------
 
-    # Only apply media-only rules inside registered threads.
-    media_thread_ids = get_media_thread_ids()
-
-    if message.channel.id not in media_thread_ids:
+    if message.guild is None:
         return
 
-    # If message has an attachment, allow it.
+    if message.guild.id != GUILD_ID:
+        return
+
+    # --------------------------------------------------------
+    # ONLY REGISTERED MEDIA THREADS
+    # --------------------------------------------------------
+
+    if not is_media_thread(message.channel.id):
+        return
+
+    # --------------------------------------------------------
+    # ALLOW PREFIX COMMANDS
+    # --------------------------------------------------------
+
+    if message.content.startswith(PREFIX):
+        return
+
+    # --------------------------------------------------------
+    # ALLOW ATTACHMENTS
+    # --------------------------------------------------------
+
     if message.attachments:
         return
 
-    # Text-only message = delete it.
+    # --------------------------------------------------------
+    # DELETE TEXT-ONLY MESSAGE
+    # --------------------------------------------------------
+
     try:
 
         await message.delete()
@@ -284,314 +539,92 @@ async def on_message(message):
     except discord.Forbidden:
 
         print(
-            "ERROR: I don't have permission to delete "
-            "messages in this thread."
+            "ERROR: I don't have permission "
+            "to delete this message."
         )
 
     except discord.HTTPException as e:
 
         print(
-            f"ERROR: Discord failed to delete the message: {e}"
+            f"ERROR: Discord failed to delete "
+            f"the message: {e}"
         )
 
 
 # ============================================================
-# REGISTER MEDIA THREAD
-# ============================================================
-
-@bot.hybrid_command(
-    name="register_media",
-    description="Register a thread as a media-only thread."
-)
-@commands.guild_only()
-@commands.has_permissions(manage_messages=True)
-async def register_media(
-    ctx: commands.Context,
-    thread: str
-):
-
-    if ctx.guild is None:
-        return
-
-    # Only allow this in your server
-    if ctx.guild.id != GUILD_ID:
-        return
-
-    # --------------------------------------------------------
-    # Extract thread ID
-    # --------------------------------------------------------
-
-    # Supports:
-    #
-    # <#123456789>
-    #
-    # or:
-    #
-    # 123456789
-    #
-
-    match = re.fullmatch(
-        r"<#(\d+)>",
-        thread.strip()
-    )
-
-    if match:
-        thread_id = int(match.group(1))
-
-    elif thread.strip().isdigit():
-        thread_id = int(thread.strip())
-
-    else:
-
-        await ctx.send(
-            "❌ Please mention a thread or provide its ID.",
-            ephemeral=True
-        )
-
-        return
-
-    # --------------------------------------------------------
-    # Fetch the thread
-    # --------------------------------------------------------
-
-    try:
-
-        target = await bot.fetch_channel(thread_id)
-
-    except discord.NotFound:
-
-        await ctx.send(
-            "❌ I couldn't find that thread.",
-            ephemeral=True
-        )
-
-        return
-
-    except discord.Forbidden:
-
-        await ctx.send(
-            "❌ I don't have permission to access that thread.",
-            ephemeral=True
-        )
-
-        return
-
-    except discord.HTTPException as e:
-
-        await ctx.send(
-            f"❌ Discord returned an error: `{e}`",
-            ephemeral=True
-        )
-
-        return
-
-    # --------------------------------------------------------
-    # Make sure it is actually a thread
-    # --------------------------------------------------------
-
-    if not isinstance(target, discord.Thread):
-
-        await ctx.send(
-            "❌ That isn't a thread. Please mention a thread.",
-            ephemeral=True
-        )
-
-        return
-
-    # Make sure the thread belongs to this server
-    if target.guild.id != GUILD_ID:
-
-        await ctx.send(
-            "❌ That thread isn't from this server.",
-            ephemeral=True
-        )
-
-        return
-
-    # --------------------------------------------------------
-    # Save thread
-    # --------------------------------------------------------
-
-    add_media_thread(target.id)
-
-    await ctx.send(
-        f"✅ {target.mention} is now a **media-only thread**.",
-        ephemeral=True
-    )
-
-    print(
-        f"Registered media thread: "
-        f"{target.name} ({target.id})"
-    )
-
-
-# ============================================================
-# UNREGISTER MEDIA THREAD
-# ============================================================
-
-@bot.hybrid_command(
-    name="unregister_media",
-    description="Remove a thread from the media-only system."
-)
-@commands.guild_only()
-@commands.has_permissions(manage_messages=True)
-async def unregister_media(
-    ctx: commands.Context,
-    thread: str
-):
-
-    if ctx.guild is None:
-        return
-
-    if ctx.guild.id != GUILD_ID:
-        return
-
-    # Extract thread ID
-    match = re.fullmatch(
-        r"<#(\d+)>",
-        thread.strip()
-    )
-
-    if match:
-        thread_id = int(match.group(1))
-
-    elif thread.strip().isdigit():
-        thread_id = int(thread.strip())
-
-    else:
-
-        await ctx.send(
-            "❌ Please mention a thread or provide its ID.",
-            ephemeral=True
-        )
-
-        return
-
-    # Remove from database
-    remove_media_thread(thread_id)
-
-    await ctx.send(
-        f"✅ Thread `{thread_id}` is no longer a media-only thread.",
-        ephemeral=True
-    )
-
-    print(
-        f"Unregistered media thread: {thread_id}"
-    )
-
-
-# ============================================================
-# LIST MEDIA THREADS
-# ============================================================
-
-@bot.hybrid_command(
-    name="media_threads",
-    description="Show all registered media-only threads."
-)
-@commands.guild_only()
-async def media_threads(ctx: commands.Context):
-
-    if ctx.guild is None:
-        return
-
-    if ctx.guild.id != GUILD_ID:
-        return
-
-    thread_ids = get_media_thread_ids()
-
-    if not thread_ids:
-
-        await ctx.send(
-            "There are currently no registered media threads.",
-            ephemeral=True
-        )
-
-        return
-
-    lines = []
-
-    for thread_id in sorted(thread_ids):
-
-        try:
-
-            channel = bot.get_channel(thread_id)
-
-            if channel is not None:
-                lines.append(
-                    f"• {channel.mention} (`{thread_id}`)"
-                )
-
-            else:
-                lines.append(
-                    f"• `{thread_id}`"
-                )
-
-        except Exception:
-
-            lines.append(
-                f"• `{thread_id}`"
-            )
-
-    await ctx.send(
-        "📁 **Registered Media Threads**\n\n"
-        + "\n".join(lines),
-        ephemeral=True
-    )
-
-
-# ============================================================
-# COMMAND ERROR HANDLER
+# COMMAND ERROR HANDLING
 # ============================================================
 
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(
+    ctx: commands.Context,
+    error: commands.CommandError
+):
 
-    # Ignore commands that don't exist
+    # Ignore unknown commands.
     if isinstance(error, commands.CommandNotFound):
         return
 
-    # Permission error
-    if isinstance(error, commands.MissingPermissions):
+    # Missing Manage Messages permission.
+    if isinstance(
+        error,
+        commands.MissingPermissions
+    ):
 
-        await ctx.send(
-            "❌ You need **Manage Messages** permission to use this command.",
-            ephemeral=True
-        )
+        if ctx.interaction:
+            await ctx.send(
+                "❌ You need **Manage Messages** permission "
+                "to use this command.",
+                ephemeral=True
+            )
+        else:
+            await ctx.send(
+                "❌ You need **Manage Messages** permission "
+                "to use this command."
+            )
 
         return
 
-    # Missing argument
-    if isinstance(error, commands.MissingRequiredArgument):
+    # Command used outside a server.
+    if isinstance(
+        error,
+        commands.NoPrivateMessage
+    ):
 
-        await ctx.send(
-            "❌ You're missing an argument. "
-            "Mention the thread you want to register.",
-            ephemeral=True
-        )
+        if ctx.interaction:
+            await ctx.send(
+                "❌ This command can only be used inside a server.",
+                ephemeral=True
+            )
+        else:
+            await ctx.send(
+                "❌ This command can only be used inside a server."
+            )
 
         return
 
-    print(
-        f"Command error: {error}"
-    )
+    print(f"Command error: {error}")
 
 
 # ============================================================
-# DATABASE INITIALIZATION
+# DATABASE SETUP
 # ============================================================
 
 setup_database()
 
 
 # ============================================================
-# START BOT
+# TOKEN CHECK
 # ============================================================
 
 if not TOKEN:
-
     raise RuntimeError(
         "DISCORD_TOKEN was not found in the environment."
     )
 
+
+# ============================================================
+# START BOT
+# ============================================================
 
 bot.run(TOKEN)
