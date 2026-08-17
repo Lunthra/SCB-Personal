@@ -23,8 +23,8 @@ PREFIX = "!!"
 # SQLite database
 DB_FILE = "media_threads.db"
 
-# These are your currently registered threads.
-# They are inserted only when the database is completely new.
+# Existing initial media thread IDs
+# DO NOT CHANGE THESE.
 INITIAL_MEDIA_THREAD_IDS = {
     1538146295489761331,
     1538183584102481932,
@@ -346,133 +346,6 @@ async def media_threads(ctx: commands.Context):
 
 
 # ============================================================
-# PIN / UNPIN MESSAGE
-# ============================================================
-
-@bot.hybrid_command(
-    name="pin",
-    description="Pin or unpin the message you are replying to."
-)
-@commands.has_permissions(manage_messages=True)
-@commands.guild_only()
-async def pin(ctx: commands.Context):
-
-    if ctx.guild is None or ctx.guild.id != GUILD_ID:
-        return
-
-    # Must be used as a reply to another message.
-    if not ctx.message or not ctx.message.reference:
-
-        if ctx.interaction:
-            await ctx.send(
-                "❌ Reply to a message with `/pin` to pin or unpin it.",
-                ephemeral=True
-            )
-        else:
-            await ctx.send(
-                "❌ Reply to a message with `!!pin` to pin or unpin it."
-            )
-
-        return
-
-    try:
-
-        message_id = ctx.message.reference.message_id
-
-        target_message = await ctx.channel.fetch_message(
-            message_id
-        )
-
-        # ----------------------------------------------------
-        # ALREADY PINNED → UNPIN
-        # ----------------------------------------------------
-
-        if target_message.pinned:
-
-            await target_message.unpin(
-                reason=f"Unpinned by {ctx.author}"
-            )
-
-            if ctx.interaction:
-                await ctx.send(
-                    "📌 Message unpinned!",
-                    ephemeral=True
-                )
-            else:
-                await ctx.send(
-                    "📌 Message unpinned!"
-                )
-
-            print(
-                f"Unpinned message {target_message.id} "
-                f"by {ctx.author} "
-                f"in {ctx.channel}"
-            )
-
-        # ----------------------------------------------------
-        # NOT PINNED → PIN
-        # ----------------------------------------------------
-
-        else:
-
-            await target_message.pin(
-                reason=f"Pinned by {ctx.author}"
-            )
-
-            if ctx.interaction:
-                await ctx.send(
-                    "📌 Message pinned!",
-                    ephemeral=True
-                )
-            else:
-                await ctx.send(
-                    "📌 Message pinned!"
-                )
-
-            print(
-                f"Pinned message {target_message.id} "
-                f"by {ctx.author} "
-                f"in {ctx.channel}"
-            )
-
-    except discord.Forbidden:
-
-        if ctx.interaction:
-            await ctx.send(
-                "❌ I don't have permission to pin or unpin messages here.",
-                ephemeral=True
-            )
-        else:
-            await ctx.send(
-                "❌ I don't have permission to pin or unpin messages here."
-            )
-
-    except discord.NotFound:
-
-        if ctx.interaction:
-            await ctx.send(
-                "❌ I couldn't find that message.",
-                ephemeral=True
-            )
-        else:
-            await ctx.send(
-                "❌ I couldn't find that message."
-            )
-
-    except discord.HTTPException as e:
-
-        if ctx.interaction:
-            await ctx.send(
-                f"❌ Failed to pin/unpin the message: `{e}`",
-                ephemeral=True
-            )
-        else:
-            await ctx.send(
-                f"❌ Failed to pin/unpin the message: `{e}`"
-            )
-
-
-# ============================================================
 # MEDIA-ONLY MESSAGE SYSTEM
 # ============================================================
 
@@ -488,7 +361,6 @@ async def on_message(message: discord.Message):
     # --------------------------------------------------------
 
     # Always allow the command system to process the message.
-    # This is important because we override on_message.
     await bot.process_commands(message)
 
     # --------------------------------------------------------
@@ -552,6 +424,129 @@ async def on_message(message: discord.Message):
 
 
 # ============================================================
+# SIMPLE PIN / UNPIN
+# ============================================================
+#
+# IMPORTANT:
+# This is a LISTENER, not a command.
+#
+# Therefore:
+#     pin
+#     unpin
+#
+# are NOT slash commands and do NOT use !!
+#
+# This listener is completely separate from the media-thread
+# on_message event above.
+# ============================================================
+
+@bot.listen("on_message")
+async def simple_pin_unpin(message: discord.Message):
+
+    # Ignore bots.
+    if message.author.bot:
+        return
+
+    # Only work in your server.
+    if message.guild is None:
+        return
+
+    if message.guild.id != GUILD_ID:
+        return
+
+    # Only react to exactly "pin" or "unpin".
+    command = message.content.strip().lower()
+
+    if command not in {"pin", "unpin"}:
+        return
+
+    # User must have Manage Messages.
+    if not message.author.guild_permissions.manage_messages:
+        return
+
+    # Must be replying to another message.
+    if message.reference is None:
+        return
+
+    # Make sure there is an actual message ID.
+    if message.reference.message_id is None:
+        return
+
+    try:
+
+        # Get the message being replied to.
+        target_message = await message.channel.fetch_message(
+            message.reference.message_id
+        )
+
+        # ----------------------------------------------------
+        # PIN
+        # ----------------------------------------------------
+
+        if command == "pin":
+
+            # Don't try to pin something already pinned.
+            if target_message.pinned:
+                return
+
+            await target_message.pin(
+                reason=f"Pinned by {message.author}"
+            )
+
+            # Remove the "pin" command message.
+            await message.delete()
+
+            print(
+                f"Pinned message {target_message.id} "
+                f"by {message.author} "
+                f"in {message.channel}"
+            )
+
+        # ----------------------------------------------------
+        # UNPIN
+        # ----------------------------------------------------
+
+        elif command == "unpin":
+
+            # Don't try to unpin something that isn't pinned.
+            if not target_message.pinned:
+                return
+
+            await target_message.unpin(
+                reason=f"Unpinned by {message.author}"
+            )
+
+            # Remove the "unpin" command message.
+            await message.delete()
+
+            print(
+                f"Unpinned message {target_message.id} "
+                f"by {message.author} "
+                f"in {message.channel}"
+            )
+
+    except discord.Forbidden:
+
+        print(
+            "ERROR: I don't have permission "
+            "to pin/unpin messages here."
+        )
+
+    except discord.NotFound:
+
+        print(
+            "ERROR: The replied message "
+            "could not be found."
+        )
+
+    except discord.HTTPException as e:
+
+        print(
+            f"ERROR: Discord failed to pin/unpin: {e}"
+        )
+
+
+# ============================================================
 # COMMAND ERROR HANDLING
 # ============================================================
 
@@ -572,12 +567,15 @@ async def on_command_error(
     ):
 
         if ctx.interaction:
+
             await ctx.send(
                 "❌ You need **Manage Messages** permission "
                 "to use this command.",
                 ephemeral=True
             )
+
         else:
+
             await ctx.send(
                 "❌ You need **Manage Messages** permission "
                 "to use this command."
@@ -592,11 +590,14 @@ async def on_command_error(
     ):
 
         if ctx.interaction:
+
             await ctx.send(
                 "❌ This command can only be used inside a server.",
                 ephemeral=True
             )
+
         else:
+
             await ctx.send(
                 "❌ This command can only be used inside a server."
             )
