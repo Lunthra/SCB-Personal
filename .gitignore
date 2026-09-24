@@ -3,3 +3,4 @@
 __pycache__/
 *.pyc
 media_threads.db
+afk.db
