@@ -1,7 +1,11 @@
 import asyncio
+import json
+import math
 import os
+import random
 import sqlite3
 import time
+from datetime import timedelta
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -148,6 +152,14 @@ intents = discord.Intents.default()
 # - media-only message handling
 intents.message_content = True
 
+# Required by discord.py versions that expose native Poll vote events.
+# These checks keep the bot compatible with versions where the attributes
+# are not exposed, while leaving the existing intents unchanged otherwise.
+if hasattr(intents, "polls"):
+    intents.polls = True
+if hasattr(intents, "guild_polls"):
+    intents.guild_polls = True
+
 bot = commands.Bot(
     command_prefix=PREFIX,
     intents=intents,
@@ -171,6 +183,903 @@ async def setup_hook():
     await bot.tree.sync(guild=guild)
 
     print("Slash commands synced.")
+
+
+# ============================================================
+# MC RANKING / NATIVE DISCORD POLLS
+# ============================================================
+#
+# This section is completely separate from the existing media-thread
+# and AFK systems. Nothing in those systems is modified here.
+#
+# Prefix:
+#     !!poll mc <number>
+#     !!info <number>
+#
+# Slash:
+#     /poll mc <number>
+#     /info <number>
+#
+# MC commands are available when the user has either:
+#     - Manage Messages
+#     - Create Polls
+#
+# Native Discord Polls are used here. Discord requires the native poll to
+# have a valid duration, so the bot creates it with a 1-hour duration and
+# manually ends it after 60 seconds. This gives the event a real 60-second
+# voting window while keeping Discord's native Poll UI.
+# ============================================================
+
+MC_DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+MC_DATA_FILES = (
+    # Complete dataset first. This is the 100-MC source of truth.
+    "mc_data_final.json",
+    # Backward-compatible filename. If you replace this file with the
+    # complete 100-MC JSON, it will also work.
+    "mc_data_sheet1.json",
+)
+
+MC_POLL_DURATION_SECONDS = 60
+
+# MC artwork folder. It sits beside bot.py:
+#     C:\media-thread-bot\images\
+MC_IMAGES_DIR = os.path.join(MC_DATA_DIR, "images")
+MC_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
+
+# Message ID -> poll metadata. This is intentionally in-memory because
+# it is only needed while a poll is active / being finalized.
+ACTIVE_MC_POLLS = {}
+
+
+def has_mc_permission(ctx: commands.Context) -> bool:
+    """Return True when the caller has Manage Messages permission."""
+
+    if ctx.guild is None:
+        return False
+
+    permissions = ctx.channel.permissions_for(ctx.author)
+    return bool(permissions.manage_messages)
+
+
+def mc_permission_message(ctx: commands.Context) -> str:
+    """Return the permission error shown by MC/Wildcard commands."""
+
+    return "❌ You need **Manage Messages** permission to use this command."
+
+
+def load_mc_data():
+    """Load the complete MC ranking JSON without touching any database."""
+
+    # Prefer the filename already used by the user's bot, but fall back to
+    # the complete compiled JSON filename if that is the file present.
+    # This makes the bot tolerant of either local filename without changing
+    # any existing bot/database behavior.
+    for filename in MC_DATA_FILES:
+        path = os.path.join(MC_DATA_DIR, filename)
+
+        if not os.path.exists(path):
+            continue
+
+        try:
+            with open(path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+        except json.JSONDecodeError as error:
+            print(f"ERROR: MC data JSON is invalid ({filename}): {error}")
+            continue
+
+        characters = data.get("characters")
+        mc_count = data.get("mc_count")
+
+        if isinstance(characters, dict) and isinstance(mc_count, int) and mc_count >= 100 and len(characters) >= 100:
+            print(f"Loaded complete MC dataset from {filename}: {len(characters)} MCs.")
+            return data
+
+        found_count = len(characters) if isinstance(characters, dict) else 0
+        print(
+            f"WARNING: {filename} contains {found_count} MCs; "
+            "the complete 100-MC dataset is required."
+        )
+
+    print(
+        "ERROR: Complete MC data file not found. Expected a 100-MC JSON "
+        "dataset named mc_data_sheet1.json or mc_data_final.json."
+    )
+    return None
+
+
+def get_mc_entry(mc_number):
+    """Return one MC entry by its numeric ID."""
+
+    data = load_mc_data()
+
+    if not data:
+        return None
+
+    characters = data.get("characters", {})
+    return characters.get(str(mc_number))
+
+
+def get_mc_image_path(mc_number):
+    """Return the local image path for an MC number, if it exists.
+
+    Images are matched by MC number. The bot checks JPG first and then
+    PNG/other supported image formats, so the files do not need to be renamed.
+    """
+
+    for extension in MC_IMAGE_EXTENSIONS:
+        image_path = os.path.join(
+            MC_IMAGES_DIR,
+            f"{mc_number}{extension}"
+        )
+
+        if os.path.isfile(image_path):
+            return image_path
+
+    return None
+
+
+def format_rating(value):
+    """Format whole-number ratings cleanly while keeping decimals."""
+
+    if float(value).is_integer():
+        return str(int(value))
+
+    return f"{float(value):.2f}".rstrip("0").rstrip(".")
+
+
+def build_mc_ranges(average):
+    """Build three adjacent 1-point ranges containing the average."""
+
+    average = float(average)
+    base = math.floor(average)
+
+    # The normal case is one range below, the range containing the average,
+    # and one range above it. At the lower boundary (0), avoid displaying a
+    # negative rating range because the ranking scale does not use negatives.
+    if base <= 0:
+        return [
+            ("0–1", True),
+            ("1–2", False),
+            ("2–3", False),
+        ]
+
+    return [
+        (f"{base - 1}–{base}", False),
+        (f"{base}–{base + 1}", True),
+        (f"{base + 1}–{base + 2}", False),
+    ]
+
+
+def shuffled_mc_ranges(average):
+    """Return the three MC ranges in a cryptographically randomized order."""
+
+    ranges = build_mc_ranges(average)
+    random.SystemRandom().shuffle(ranges)
+    return ranges
+
+
+# ============================================================
+# WILDCARD SYSTEM
+# ============================================================
+#
+# This is a completely separate system from the rated 100-MC ranking.
+#
+# Data:
+#     wildcard_data.json
+# Images:
+#     wildcard_images/1.jpg ... wildcard_images/51.jpg/png
+#
+# Commands:
+#     !!wildcard info <number>
+#     !!wildcard poll <number>
+#     !!wildcard end
+#
+# Slash equivalents:
+#     /wildcard info <number>
+#     /wildcard poll <number>
+#     /wildcard end
+#
+# Wildcard polls use the native Discord Poll UI with answers 1-10.
+# Discord requires a valid native poll duration, so the poll is created
+# with a 1-hour native duration and manually ended after 60 seconds.
+# A moderator/organizer can also end the active poll early with
+# `!!wildcard end` or `/wildcard end`.
+# ============================================================
+
+WILDCARD_DATA_FILE = os.path.join(MC_DATA_DIR, "wildcard_data.json")
+WILDCARD_IMAGES_DIR = os.path.join(MC_DATA_DIR, "wildcard images")
+WILDCARD_POLL_DURATION_SECONDS = 60
+
+# Message ID -> active wildcard poll metadata.
+ACTIVE_WILDCARD_POLLS = {}
+
+
+def load_wildcard_data():
+    """Load the separate 51-character Wildcard metadata file."""
+
+    if not os.path.exists(WILDCARD_DATA_FILE):
+        print(
+            f"ERROR: Wildcard data file not found: {WILDCARD_DATA_FILE}"
+        )
+        return None
+
+    try:
+        with open(WILDCARD_DATA_FILE, "r", encoding="utf-8") as file:
+            data = json.load(file)
+    except (OSError, json.JSONDecodeError) as error:
+        print(f"ERROR: Could not load wildcard_data.json: {error}")
+        return None
+
+    characters = data.get("characters")
+    count = data.get("wildcard_count")
+
+    if not isinstance(characters, dict) or not isinstance(count, int):
+        print("ERROR: wildcard_data.json has an invalid structure.")
+        return None
+
+    if count != 51 or len(characters) < 51:
+        print(
+            f"WARNING: wildcard_data.json contains {len(characters)} entries; "
+            "51 Wildcards are expected."
+        )
+
+    return data
+
+
+def get_wildcard_entry(number: int):
+    """Return one Wildcard entry by number."""
+
+    data = load_wildcard_data()
+    if not data:
+        return None
+
+    return data.get("characters", {}).get(str(number))
+
+
+def get_wildcard_image_path(number: int):
+    """Find a Wildcard image by number, supporting JPG/JPEG/PNG/WEBP."""
+
+    for extension in ("jpg", "jpeg", "png", "webp"):
+        path = os.path.join(
+            WILDCARD_IMAGES_DIR,
+            f"{number}.{extension}"
+        )
+
+        if os.path.isfile(path):
+            return path
+
+    return None
+
+
+def build_wildcard_poll():
+    """Create the native Discord poll containing ratings 1 through 10."""
+
+    poll = discord.Poll(
+        question="How would you rate this Wildcard character?",
+        # Discord's native Poll API requires a valid duration. We manually
+        # close the poll after 60 seconds below.
+        duration=timedelta(hours=1),
+        multiple=False
+    )
+
+    for rating in range(1, 11):
+        poll.add_answer(text=str(rating))
+
+    return poll
+
+
+def calculate_wildcard_average(poll_message: discord.Message):
+    """Calculate the arithmetic mean from the native Poll answer vote counts."""
+
+    if poll_message.poll is None:
+        return None, 0, []
+
+    total_points = 0
+    total_votes = 0
+    distribution = []
+
+    for answer in poll_message.poll.answers:
+        vote_count = int(getattr(answer, "vote_count", 0) or 0)
+
+        try:
+            rating = int(answer.text)
+        except (TypeError, ValueError):
+            continue
+
+        if rating < 1 or rating > 10:
+            continue
+
+        total_points += rating * vote_count
+        total_votes += vote_count
+        distribution.append((rating, vote_count))
+
+    if total_votes == 0:
+        return None, 0, distribution
+
+    return total_points / total_votes, total_votes, distribution
+
+
+def format_wildcard_average(value):
+    """Format the Wildcard average to two decimal places."""
+
+    if value is None:
+        return "No votes"
+
+    return f"{value:.2f}"
+
+
+async def finish_wildcard_poll(message_id: int):
+    """End a Wildcard poll and post its calculated average."""
+
+    await asyncio.sleep(WILDCARD_POLL_DURATION_SECONDS)
+    await finalize_wildcard_poll(message_id)
+
+
+async def finalize_wildcard_poll(message_id: int):
+    """Finalize one active Wildcard poll, calculate its average, and announce it."""
+
+    poll_info = ACTIVE_WILDCARD_POLLS.get(message_id)
+    if poll_info is None:
+        return
+
+    try:
+        channel = bot.get_channel(poll_info["channel_id"])
+
+        if channel is None:
+            channel = await bot.fetch_channel(poll_info["channel_id"])
+
+        message = await channel.fetch_message(message_id)
+
+        # Close the native Discord Poll if it is still open.
+        if message.poll is not None and not message.poll.is_finalised():
+            try:
+                message = await message.end_poll()
+            except discord.HTTPException:
+                # It may have been finalized between the check and request.
+                pass
+
+        # Refresh the message after ending so the final vote counts are used.
+        try:
+            message = await channel.fetch_message(message_id)
+        except discord.HTTPException:
+            pass
+
+        average, total_votes, _distribution = calculate_wildcard_average(message)
+        character_name = poll_info["character_name"]
+        wildcard_number = poll_info["number"]
+
+        if average is None:
+            result = (
+                f"🎯 **Wildcard #{wildcard_number} — {character_name}**\n"
+                "**Average Rating:** `No votes`\n"
+                "**Total Votes:** `0`"
+            )
+        else:
+            result = (
+                f"🎯 **Wildcard #{wildcard_number} — {character_name}**\n"
+                f"**Average Rating:** `{format_wildcard_average(average)}/10`\n"
+                f"**Total Votes:** `{total_votes}`"
+            )
+
+        await channel.send(result)
+
+    except (discord.NotFound, discord.Forbidden, discord.HTTPException) as error:
+        print(
+            f"ERROR: Could not finalize Wildcard poll {message_id}: {error}"
+        )
+
+    finally:
+        ACTIVE_WILDCARD_POLLS.pop(message_id, None)
+
+
+@bot.hybrid_group(
+    name="wildcard",
+    fallback="info",
+    description="Wildcard character information and stream rating polls."
+)
+@commands.has_permissions(manage_messages=True)
+@commands.guild_only()
+async def wildcard(ctx: commands.Context, number: int):
+    """Show Wildcard information. `!!wildcard 1` is an info shortcut."""
+
+    if ctx.guild is None or ctx.guild.id != GUILD_ID:
+        return
+
+    if not has_mc_permission(ctx):
+        await ctx.send(mc_permission_message(ctx), ephemeral=True)
+        return
+
+    if number < 1:
+        await ctx.send(
+            "❌ Wildcard number must be 1 or higher.",
+            ephemeral=True
+        )
+        return
+
+    entry = get_wildcard_entry(number)
+
+    if entry is None:
+        data = load_wildcard_data()
+        count = data.get("wildcard_count", 0) if data else 0
+
+        await ctx.send(
+            f"❌ Wildcard `{number}` was not found. "
+            f"Available Wildcards: `1`–`{count or 51}`.",
+            ephemeral=True
+        )
+        return
+
+    character_name = entry["name"]
+    embed = discord.Embed(
+        title=f"Wildcard #{number}",
+        description=f"**{character_name}**",
+        color=discord.Color.blurple()
+    )
+
+    image_path = get_wildcard_image_path(number)
+
+    if image_path is None:
+        print(
+            f"WARNING: No image found for Wildcard #{number} in "
+            f"{WILDCARD_IMAGES_DIR}"
+        )
+        await ctx.send(embed=embed, ephemeral=True)
+        return
+
+    image_filename = os.path.basename(image_path)
+    image_file = discord.File(image_path, filename=image_filename)
+    embed.set_image(url=f"attachment://{image_filename}")
+
+    await ctx.send(
+        embed=embed,
+        file=image_file,
+        ephemeral=True
+    )
+
+
+@wildcard.command(
+    name="poll",
+    description="Start a 60-second 1-to-10 Wildcard rating poll."
+)
+@commands.has_permissions(manage_messages=True)
+@commands.guild_only()
+async def wildcard_poll(ctx: commands.Context, number: int):
+    """Send the character image first, then start its 1-10 native poll."""
+
+    if ctx.guild is None or ctx.guild.id != GUILD_ID:
+        return
+
+    if not has_mc_permission(ctx):
+        await ctx.send(mc_permission_message(ctx), ephemeral=True)
+        return
+
+    if number < 1:
+        await ctx.send(
+            "❌ Wildcard number must be 1 or higher.",
+            ephemeral=True
+        )
+        return
+
+    entry = get_wildcard_entry(number)
+    if entry is None:
+        data = load_wildcard_data()
+        count = data.get("wildcard_count", 0) if data else 0
+        await ctx.send(
+            f"❌ Wildcard `{number}` was not found. "
+            f"Available Wildcards: `1`–`{count or 51}`.",
+            ephemeral=True
+        )
+        return
+
+    image_path = get_wildcard_image_path(number)
+    if image_path is None:
+        await ctx.send(
+            f"❌ I couldn't find the image for Wildcard `{number}` in "
+            f"`wildcard images`.\n"
+            f"Expected `{number}.jpg`, `{number}.jpeg`, `{number}.png`, "
+            f"or `{number}.webp`.",
+            ephemeral=True
+        )
+        return
+
+    character_name = entry["name"]
+    image_filename = os.path.basename(image_path)
+    image_file = discord.File(image_path, filename=image_filename)
+
+    # Send the image first, as requested for the stream workflow.
+    try:
+        await ctx.send(
+            content=f"**Wildcard #{number} — {character_name}**",
+            file=image_file
+        )
+    except (discord.HTTPException, discord.Forbidden) as error:
+        print(f"ERROR: Could not send Wildcard image: {error}")
+        await ctx.send(
+            "❌ I couldn't send the Wildcard image.",
+            ephemeral=True
+        )
+        return
+
+    poll = build_wildcard_poll()
+
+    try:
+        poll_message = await ctx.send(poll=poll)
+    except (discord.HTTPException, discord.Forbidden) as error:
+        print(f"ERROR: Could not create Wildcard native poll: {error}")
+        await ctx.send(
+            "❌ I couldn't create the Wildcard native Discord poll. "
+            f"Discord returned: `{error}`",
+            ephemeral=True
+        )
+        return
+
+    ACTIVE_WILDCARD_POLLS[poll_message.id] = {
+        "channel_id": poll_message.channel.id,
+        "number": number,
+        "character_name": character_name,
+    }
+
+    asyncio.create_task(finish_wildcard_poll(poll_message.id))
+
+    print(
+        f"Started Wildcard poll #{number}: {character_name} "
+        f"(message {poll_message.id})"
+    )
+
+
+@wildcard.command(
+    name="end",
+    description="End the active Wildcard poll in this channel early."
+)
+@commands.has_permissions(manage_messages=True)
+@commands.guild_only()
+async def wildcard_end(ctx: commands.Context):
+    """Manually end the most recent active Wildcard poll in this channel."""
+
+    if ctx.guild is None or ctx.guild.id != GUILD_ID:
+        return
+
+    if not has_mc_permission(ctx):
+        await ctx.send(mc_permission_message(ctx), ephemeral=True)
+        return
+
+    channel_id = ctx.channel.id
+
+    candidates = [
+        (message_id, info)
+        for message_id, info in ACTIVE_WILDCARD_POLLS.items()
+        if info["channel_id"] == channel_id
+    ]
+
+    if not candidates:
+        await ctx.send(
+            "ℹ️ There is no active Wildcard poll in this channel.",
+            ephemeral=True
+        )
+        return
+
+    # Use the most recently created active poll in this channel.
+    message_id, _info = max(candidates, key=lambda item: item[0])
+
+    await finalize_wildcard_poll(message_id)
+
+    print(
+        f"Manually ended Wildcard poll {message_id} in channel {channel_id}."
+    )
+
+
+async def finish_mc_poll(message_id):
+    """End a native MC poll after 60 seconds and reveal its correct range."""
+
+    await asyncio.sleep(MC_POLL_DURATION_SECONDS)
+
+    poll_info = ACTIVE_MC_POLLS.get(message_id)
+    if poll_info is None:
+        return
+
+    try:
+        channel = bot.get_channel(poll_info["channel_id"])
+
+        if channel is None:
+            channel = await bot.fetch_channel(poll_info["channel_id"])
+
+        message = await channel.fetch_message(message_id)
+
+        # end_poll() guarantees closure at the requested 60-second mark if
+        # Discord has not already finalized the native poll.
+        if message.poll is not None and not message.poll.is_finalised():
+            try:
+                message = await message.end_poll()
+            except discord.HTTPException:
+                # Discord may already have finalized the poll between the
+                # check and this request. That is safe to ignore.
+                pass
+
+        average = poll_info["average"]
+        correct_range = poll_info["correct_range"]
+        character_name = poll_info["character_name"]
+
+        await channel.send(
+            f"🎯 **{character_name} — MC Result**\n"
+            f"Actual community average: **{format_rating(average)}**\n"
+            f"Correct range: **{correct_range}**"
+        )
+
+    except (discord.NotFound, discord.Forbidden, discord.HTTPException) as error:
+        print(f"ERROR: Could not finalize MC poll {message_id}: {error}")
+
+    finally:
+        ACTIVE_MC_POLLS.pop(message_id, None)
+
+
+# ------------------------------------------------------------
+# MC POLL
+# ------------------------------------------------------------
+
+@bot.hybrid_command(
+    name="poll",
+    description="Start an MC average-range native Discord poll."
+)
+@commands.has_permissions(manage_messages=True)
+@commands.guild_only()
+async def mc_poll(ctx: commands.Context, category: str, number: int):
+    """Create a randomized native Discord poll for an MC average."""
+
+    if ctx.guild is None or ctx.guild.id != GUILD_ID:
+        return
+
+    if not has_mc_permission(ctx):
+        await ctx.send(
+            mc_permission_message(ctx),
+            ephemeral=True
+        )
+        return
+
+    if category.lower() != "mc":
+        await ctx.send(
+            "❌ Only the `mc` category is available right now. "
+            "Example: `!!poll mc 1`",
+            ephemeral=True
+        )
+        return
+
+    if number < 1:
+        await ctx.send(
+            "❌ MC number must be 1 or higher.",
+            ephemeral=True
+        )
+        return
+
+    entry = get_mc_entry(number)
+
+    if entry is None:
+        data = load_mc_data()
+        count = data.get("mc_count", 0) if data else 0
+
+        if count == 0:
+            message = (
+                f"❌ MC `{number}` was not found because the complete MC dataset "
+                "could not be loaded. Make sure `mc_data_final.json` is in the "
+                "same folder as `bot.py`."
+            )
+        else:
+            message = (
+                f"❌ MC `{number}` was not found. "
+                f"Available MCs: `1`–`{count}`."
+            )
+
+        await ctx.send(message, ephemeral=True)
+        return
+
+    character_name = entry["name"]
+    average = float(entry["average"])
+
+    ranges = shuffled_mc_ranges(average)
+
+    poll = discord.Poll(
+        question=f"What range is the community average for {character_name}?",
+        # Discord requires a valid native duration; the bot manually ends
+        # the poll after 60 seconds.
+        duration=timedelta(hours=1),
+        multiple=False
+    )
+
+    correct_range = None
+
+    for option_text, is_correct in ranges:
+        poll.add_answer(text=option_text)
+        if is_correct:
+            correct_range = option_text
+
+    if correct_range is None:
+        await ctx.send(
+            "❌ Could not determine the correct MC range.",
+            ephemeral=True
+        )
+        return
+
+    try:
+        # Passing poll= creates Discord's actual native Poll UI.
+        sent_message = await ctx.send(poll=poll)
+    except (discord.HTTPException, discord.Forbidden) as error:
+        print(f"ERROR: Could not create native MC poll: {error}")
+        await ctx.send(
+            "❌ I couldn't create the native Discord poll. "
+            f"Discord returned: `{error}`",
+            ephemeral=True
+        )
+        return
+
+    ACTIVE_MC_POLLS[sent_message.id] = {
+        "channel_id": sent_message.channel.id,
+        "character_name": character_name,
+        "average": average,
+        "correct_range": correct_range,
+    }
+
+    asyncio.create_task(finish_mc_poll(sent_message.id))
+
+    print(
+        f"Started MC poll #{number}: {character_name} "
+        f"(message {sent_message.id}, average {average})"
+    )
+
+
+# ------------------------------------------------------------
+# MC INFO
+# ------------------------------------------------------------
+
+@bot.hybrid_command(
+    name="info",
+    description="Show information for an MC from the ranking data."
+)
+@commands.has_permissions(manage_messages=True)
+@commands.guild_only()
+async def mc_info(ctx: commands.Context, number: int):
+    """Show MC information and its matching local character image."""
+
+    if ctx.guild is None or ctx.guild.id != GUILD_ID:
+        return
+
+    if not has_mc_permission(ctx):
+        await ctx.send(
+            mc_permission_message(ctx),
+            ephemeral=True
+        )
+        return
+
+    if number < 1:
+        await ctx.send(
+            "❌ MC number must be 1 or higher.",
+            ephemeral=True
+        )
+        return
+
+    entry = get_mc_entry(number)
+
+    if entry is None:
+        data = load_mc_data()
+        count = data.get("mc_count", 0) if data else 0
+
+        if count == 0:
+            message = (
+                f"❌ MC `{number}` was not found because the complete MC dataset "
+                "could not be loaded. Make sure the complete 100-MC JSON file "
+                "(`mc_data_sheet1.json` or `mc_data_final.json`) is in the "
+                "same folder as `bot.py`."
+            )
+        else:
+            message = (
+                f"❌ MC `{number}` was not found. "
+                f"Available MCs: `1`–`{count}`."
+            )
+
+        await ctx.send(message, ephemeral=True)
+        return
+
+    lowest_by = ", ".join(entry.get("lowest_by", [])) or "Not recorded"
+    highest_by = ", ".join(entry.get("highest_by", [])) or "Not recorded"
+
+    embed = discord.Embed(
+        title=f"📊 MC #{number} — {entry['name']}",
+        description=(
+            f"**Community Average:** `{format_rating(entry['average'])}`\n"
+            f"**Ratings:** `{entry['ratings_count']}`"
+        ),
+        color=discord.Color.blurple()
+    )
+
+    embed.add_field(
+        name="Lowest Rating",
+        value=(
+            f"`{format_rating(entry['lowest_rating'])}`\n"
+            f"By: {lowest_by}"
+        ),
+        inline=True
+    )
+
+    embed.add_field(
+        name="Highest Rating",
+        value=(
+            f"`{format_rating(entry['highest_rating'])}`\n"
+            f"By: {highest_by}"
+        ),
+        inline=True
+    )
+
+    # Match the MC number directly to its image filename. For example:
+    #     MC #1  -> images/1.jpg
+    #     MC #27 -> images/27.png
+    image_path = get_mc_image_path(number)
+
+    if image_path is not None:
+        image_filename = os.path.basename(image_path)
+        image_file = discord.File(
+            image_path,
+            filename=image_filename
+        )
+        embed.set_image(url=f"attachment://{image_filename}")
+
+        await ctx.send(
+            embed=embed,
+            file=image_file,
+            ephemeral=True
+        )
+        return
+
+    # The ranking information still works if an image is temporarily missing.
+    # Log the missing file so it is easy to identify from the bot terminal.
+    print(
+        f"WARNING: No image found for MC #{number} in "
+        f"{MC_IMAGES_DIR}"
+    )
+
+    await ctx.send(
+        embed=embed,
+        ephemeral=True
+    )
+
+
+# ------------------------------------------------------------
+# NATIVE POLL VOTE EVENTS
+# ------------------------------------------------------------
+#
+# These listeners do not alter the native poll. They only log native poll
+# vote activity while a poll is active. Discord remains responsible for the
+# native Poll UI and its displayed results/voters.
+# ------------------------------------------------------------
+
+if hasattr(discord.Intents, "polls"):
+
+    @bot.listen("on_poll_vote_add")
+    async def mc_poll_vote_add(user, answer):
+        if answer.poll.message is None:
+            return
+
+        message_id = answer.poll.message.id
+
+        if message_id not in ACTIVE_MC_POLLS:
+            return
+
+        print(
+            f"MC poll vote: {user} voted for "
+            f"{answer.text} (message {message_id})"
+        )
+
+    @bot.listen("on_poll_vote_remove")
+    async def mc_poll_vote_remove(user, answer):
+        if answer.poll.message is None:
+            return
+
+        message_id = answer.poll.message.id
+
+        if message_id not in ACTIVE_MC_POLLS:
+            return
+
+        print(
+            f"MC poll vote removed: {user} removed "
+            f"{answer.text} (message {message_id})"
+        )
 
 
 # ============================================================

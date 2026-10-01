@@ -1,0 +1,1572 @@
+{
+  "version": 2,
+  "source": "MC_Ranking_Final.xlsx",
+  "mc_count": 100,
+  "characters": {
+    "1": {
+      "name": "Yuji Itadori",
+      "average": 6.93,
+      "lowest_rating": 4.0,
+      "lowest_by": [
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Kafka"
+      ],
+      "ratings_count": 14
+    },
+    "2": {
+      "name": "Violet Evergarden",
+      "average": 9.91,
+      "lowest_rating": 9.0,
+      "lowest_by": [
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Monty",
+        "Psyco",
+        "Aryan",
+        "Oren",
+        "Hito",
+        "Jas",
+        "Himesh",
+        "Sagar",
+        "Uv"
+      ],
+      "ratings_count": 11
+    },
+    "3": {
+      "name": "Mao Mao",
+      "average": 8.82,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush",
+        "Batman",
+        "Oren",
+        "Jas",
+        "Likhit",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Monty",
+        "Psyco",
+        "Himesh",
+        "Sagar"
+      ],
+      "ratings_count": 11
+    },
+    "4": {
+      "name": "Naruto Uzumaki",
+      "average": 8.17,
+      "lowest_rating": 1.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Jas",
+        "Himesh",
+        "Namya",
+        "Pranjal"
+      ],
+      "ratings_count": 12
+    },
+    "5": {
+      "name": "Light Yagami",
+      "average": 8.0,
+      "lowest_rating": 4.0,
+      "lowest_by": [
+        "Kafka"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Oren",
+        "Hito"
+      ],
+      "ratings_count": 15
+    },
+    "6": {
+      "name": "Frieren",
+      "average": 9.25,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Psyco",
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Gherman",
+        "Sagar",
+        "Uv",
+        "Shubham"
+      ],
+      "ratings_count": 12
+    },
+    "7": {
+      "name": "Kōsei Arima",
+      "average": 8.0,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Psyco"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Hito",
+        "Prash"
+      ],
+      "ratings_count": 10
+    },
+    "8": {
+      "name": "Kiyotaka Ayanokōji",
+      "average": 7.12,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Batman",
+        "Jas",
+        "Krish",
+        "Sagar"
+      ],
+      "ratings_count": 8
+    },
+    "9": {
+      "name": "Saitama",
+      "average": 8.36,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Aryan"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Oren",
+        "Namya",
+        "Prash",
+        "Uv"
+      ],
+      "ratings_count": 14
+    },
+    "10": {
+      "name": "Hitori Gotoh",
+      "average": 8.45,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Oren",
+        "Likhit",
+        "Krish"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Himesh",
+        "Prash",
+        "Uv"
+      ],
+      "ratings_count": 11
+    },
+    "11": {
+      "name": "Thorfinn Karlsefni",
+      "average": 9.27,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Hito"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Batman",
+        "Oren",
+        "Himesh",
+        "Namya",
+        "Sagar"
+      ],
+      "ratings_count": 11
+    },
+    "12": {
+      "name": "Yor Forger",
+      "average": 8.27,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Vital"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Gherman",
+        "Jounalist"
+      ],
+      "ratings_count": 11
+    },
+    "13": {
+      "name": "Denji",
+      "average": 6.94,
+      "lowest_rating": 1.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Hito"
+      ],
+      "ratings_count": 17
+    },
+    "14": {
+      "name": "Miyuki Shirogane",
+      "average": 8.0,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Sagar"
+      ],
+      "ratings_count": 6
+    },
+    "15": {
+      "name": "Subaru Natsuki",
+      "average": 7.6,
+      "lowest_rating": 1.0,
+      "lowest_by": [
+        "Gherman"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Psyco",
+        "Hito"
+      ],
+      "ratings_count": 10
+    },
+    "16": {
+      "name": "Shigeo Kageyama",
+      "average": 9.0,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Prash"
+      ],
+      "ratings_count": 5
+    },
+    "17": {
+      "name": "Sakuta Azusagawa",
+      "average": 8.0,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Batman"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Krish",
+        "Sagar"
+      ],
+      "ratings_count": 7
+    },
+    "18": {
+      "name": "Izumi Miyamura",
+      "average": 8.4,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Krish",
+        "Himesh",
+        "Prash"
+      ],
+      "ratings_count": 10
+    },
+    "19": {
+      "name": "Eren Yeager",
+      "average": 8.43,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Aryan",
+        "Shubham",
+        "Pranjal"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Oren",
+        "Hito",
+        "Himesh",
+        "Nobody",
+        "Uv"
+      ],
+      "ratings_count": 14
+    },
+    "20": {
+      "name": "Rimuru Tempest",
+      "average": 9.0,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Oren",
+        "Krish",
+        "Nobody"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Aryan",
+        "Gherman"
+      ],
+      "ratings_count": 9
+    },
+    "21": {
+      "name": "Rintarō Okabe",
+      "average": 9.5,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Psyco",
+        "Hito",
+        "Himesh",
+        "Prash"
+      ],
+      "ratings_count": 8
+    },
+    "22": {
+      "name": "Monkey D. Luffy",
+      "average": 8.54,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Vital",
+        "Aryan",
+        "Anvit"
+      ],
+      "ratings_count": 13
+    },
+    "23": {
+      "name": "Hyakkimaru",
+      "average": 9.22,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Oren",
+        "Hito",
+        "Uv"
+      ],
+      "ratings_count": 9
+    },
+    "24": {
+      "name": "Lelouch Lamperouge",
+      "average": 9.7,
+      "lowest_rating": 9.0,
+      "lowest_by": [
+        "Ayush",
+        "Likhit",
+        "Himesh"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Vital",
+        "Psyco",
+        "Aryan",
+        "Oren",
+        "Anvit",
+        "Prash",
+        "Shubham"
+      ],
+      "ratings_count": 10
+    },
+    "25": {
+      "name": "Rintarō Tsumugi",
+      "average": 8.17,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Ayush",
+        "Himesh",
+        "Uv"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Sagar"
+      ],
+      "ratings_count": 12
+    },
+    "26": {
+      "name": "Ichigo Kurosaki",
+      "average": 8.82,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush",
+        "Batman",
+        "Oren",
+        "Namya",
+        "Sagar"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Aryan",
+        "Prash"
+      ],
+      "ratings_count": 11
+    },
+    "27": {
+      "name": "Rudeus Greyrat",
+      "average": 9.58,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Batman",
+        "Nobody"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Psyco",
+        "Oren",
+        "Jas",
+        "Anvit",
+        "Likhit",
+        "Himesh",
+        "Sagar",
+        "Uv"
+      ],
+      "ratings_count": 12
+    },
+    "28": {
+      "name": "Ippo Makunouchi",
+      "average": 9.0,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco"
+      ],
+      "ratings_count": 4
+    },
+    "29": {
+      "name": "Hachiman Hikigaya",
+      "average": 9.0,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush",
+        "Batman",
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Likhit",
+        "Krish",
+        "Sagar"
+      ],
+      "ratings_count": 6
+    },
+    "30": {
+      "name": "Shinji Ikari",
+      "average": 8.43,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Hito"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Ayush",
+        "Vital",
+        "Aryan",
+        "Prash"
+      ],
+      "ratings_count": 7
+    },
+    "31": {
+      "name": "YoRHa No. 2 Type B",
+      "average": 7.33,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Oren",
+        "Krish"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Psyco"
+      ],
+      "ratings_count": 3
+    },
+    "32": {
+      "name": "Kazuya Kinoshita",
+      "average": 3.4,
+      "lowest_rating": 1.0,
+      "lowest_by": [
+        "Batman",
+        "Oren",
+        "Uv"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco"
+      ],
+      "ratings_count": 5
+    },
+    "33": {
+      "name": "Bojji",
+      "average": 8.5,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush",
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Psyco",
+        "Sagar"
+      ],
+      "ratings_count": 4
+    },
+    "34": {
+      "name": "Mash Burnedead",
+      "average": 6.67,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Batman",
+        "Oren"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Psyco",
+        "Sagar"
+      ],
+      "ratings_count": 6
+    },
+    "35": {
+      "name": "Will Serfort",
+      "average": 6.57,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Ayush",
+        "Batman",
+        "Oren",
+        "Shubham"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Krish"
+      ],
+      "ratings_count": 7
+    },
+    "36": {
+      "name": "Kenzo Tenma",
+      "average": 10.0,
+      "lowest_rating": 10.0,
+      "lowest_by": [
+        "Ayush",
+        "Psyco",
+        "Aryan",
+        "Oren",
+        "Hito",
+        "Likhit",
+        "Pranjal"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Psyco",
+        "Aryan",
+        "Oren",
+        "Hito",
+        "Likhit",
+        "Pranjal"
+      ],
+      "ratings_count": 7
+    },
+    "37": {
+      "name": "Jolyne Cujoh",
+      "average": 9.5,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Psyco"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Oren",
+        "Prash"
+      ],
+      "ratings_count": 4
+    },
+    "38": {
+      "name": "Gon Freecss",
+      "average": 7.62,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Ayush",
+        "Vital",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Aryan",
+        "Sagar"
+      ],
+      "ratings_count": 13
+    },
+    "39": {
+      "name": "Son Goku",
+      "average": 8.0,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Sagar"
+      ],
+      "ratings_count": 11
+    },
+    "40": {
+      "name": "Nine",
+      "average": 8.33,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush",
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Monty"
+      ],
+      "ratings_count": 3
+    },
+    "41": {
+      "name": "Amane Fujimiya",
+      "average": 4.83,
+      "lowest_rating": 1.0,
+      "lowest_by": [
+        "Ayush",
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Krish"
+      ],
+      "ratings_count": 6
+    },
+    "42": {
+      "name": "Izuku Midoriya",
+      "average": 6.78,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Ayush",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Vital"
+      ],
+      "ratings_count": 9
+    },
+    "43": {
+      "name": "Kaguya Shinomiya",
+      "average": 8.83,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush",
+        "Monty",
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Sagar"
+      ],
+      "ratings_count": 6
+    },
+    "44": {
+      "name": "Rudo Surebrec",
+      "average": 6.75,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Monty",
+        "Krish",
+        "Pranjal"
+      ],
+      "ratings_count": 8
+    },
+    "45": {
+      "name": "Joe Yabuki",
+      "average": 9.5,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Oren",
+        "Anvit"
+      ],
+      "ratings_count": 4
+    },
+    "46": {
+      "name": "Gabimaru",
+      "average": 8.11,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Ayush",
+        "Psyco"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Krish"
+      ],
+      "ratings_count": 9
+    },
+    "47": {
+      "name": "Kafka Hibino",
+      "average": 6.89,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Monty",
+        "Psyco",
+        "Shubham"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Sagar",
+        "Pranjal"
+      ],
+      "ratings_count": 9
+    },
+    "48": {
+      "name": "Marin Kitagawa",
+      "average": 9.06,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Oren",
+        "Likhit"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Vital",
+        "Psyco",
+        "Asutosh",
+        "Gherman",
+        "Jounalist",
+        "Krish",
+        "Sagar",
+        "Uv"
+      ],
+      "ratings_count": 16
+    },
+    "49": {
+      "name": "Lain Iwakura",
+      "average": 9.0,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Hito"
+      ],
+      "ratings_count": 5
+    },
+    "50": {
+      "name": "Gintoki Sakata",
+      "average": 9.67,
+      "lowest_rating": 9.0,
+      "lowest_by": [
+        "Oren",
+        "Sagar"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Psyco",
+        "Batman",
+        "Anvit"
+      ],
+      "ratings_count": 6
+    },
+    "51": {
+      "name": "Jonathan Joestar",
+      "average": 7.67,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Ayush",
+        "Oren",
+        "Likhit",
+        "Prash"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco"
+      ],
+      "ratings_count": 6
+    },
+    "52": {
+      "name": "Nagisa Shiota",
+      "average": 8.0,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Aryan"
+      ],
+      "ratings_count": 5
+    },
+    "53": {
+      "name": "Shinpei Ajiro",
+      "average": 9.43,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Aryan",
+        "Likhit",
+        "Sagar"
+      ],
+      "ratings_count": 7
+    },
+    "54": {
+      "name": "Joseph Joestar",
+      "average": 9.8,
+      "lowest_rating": 9.0,
+      "lowest_by": [
+        "Sagar"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Psyco",
+        "Oren",
+        "Prash"
+      ],
+      "ratings_count": 5
+    },
+    "55": {
+      "name": "Tobio Kageyama",
+      "average": 8.38,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush",
+        "Vital",
+        "Psyco",
+        "Oren",
+        "Likhit",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Aryan"
+      ],
+      "ratings_count": 8
+    },
+    "56": {
+      "name": "Nana Osaki",
+      "average": 9.0,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Psyco"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Oren"
+      ],
+      "ratings_count": 4
+    },
+    "57": {
+      "name": "Nana Komatsu",
+      "average": 8.25,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Psyco",
+        "Oren",
+        "Asutosh"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Ayush"
+      ],
+      "ratings_count": 4
+    },
+    "58": {
+      "name": "Shōyō Hinata",
+      "average": 8.7,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Ayush",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Aryan",
+        "Batman",
+        "Sagar",
+        "Tirth"
+      ],
+      "ratings_count": 10
+    },
+    "59": {
+      "name": "Jotaro Kujo",
+      "average": 9.25,
+      "lowest_rating": 9.0,
+      "lowest_by": [
+        "Ayush",
+        "Psyco",
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Sagar"
+      ],
+      "ratings_count": 4
+    },
+    "60": {
+      "name": "Vanitas",
+      "average": 7.4,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Monty",
+        "Batman",
+        "Himesh"
+      ],
+      "ratings_count": 5
+    },
+    "61": {
+      "name": "Edward Elric",
+      "average": 9.0,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush",
+        "Sagar",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Vital",
+        "Psyco",
+        "Hito"
+      ],
+      "ratings_count": 9
+    },
+    "62": {
+      "name": "Anya Forger",
+      "average": 8.56,
+      "lowest_rating": 3.0,
+      "lowest_by": [
+        "Vital"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Oren",
+        "Gherman",
+        "Himesh"
+      ],
+      "ratings_count": 9
+    },
+    "63": {
+      "name": "Akira Fudō",
+      "average": 8.12,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Oren",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Amazing Ayush"
+      ],
+      "ratings_count": 8
+    },
+    "64": {
+      "name": "David Martinez",
+      "average": 7.25,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Hito"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Monty",
+        "Likhit",
+        "Prash",
+        "Pranjal"
+      ],
+      "ratings_count": 8
+    },
+    "65": {
+      "name": "Tanjiro Kamado",
+      "average": 7.47,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Ayush",
+        "Psyco"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Aryan",
+        "Hito"
+      ],
+      "ratings_count": 15
+    },
+    "66": {
+      "name": "Satoru Fujinuma",
+      "average": 8.12,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Monty"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Amazing Ayush",
+        "Aryan"
+      ],
+      "ratings_count": 8
+    },
+    "67": {
+      "name": "Kōichi Sakakibara",
+      "average": 7.4,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Aryan"
+      ],
+      "ratings_count": 5
+    },
+    "68": {
+      "name": "Giorno Giovanna",
+      "average": 7.75,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Ayush",
+        "Psyco",
+        "Prash"
+      ],
+      "ratings_count": 4
+    },
+    "69": {
+      "name": "Ken Kaneki",
+      "average": 7.67,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Aryan"
+      ],
+      "ratings_count": 6
+    },
+    "70": {
+      "name": "Taiki Inomata",
+      "average": 7.43,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Krish"
+      ],
+      "ratings_count": 7
+    },
+    "71": {
+      "name": "Kazuhiko Nukumizu",
+      "average": 4.6,
+      "lowest_rating": 1.0,
+      "lowest_by": [
+        "Nobody"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Krish"
+      ],
+      "ratings_count": 5
+    },
+    "72": {
+      "name": "Natsu Dragneel",
+      "average": 8.0,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Shubham"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Psyco",
+        "Pranjal"
+      ],
+      "ratings_count": 5
+    },
+    "73": {
+      "name": "Takemichi Hanagaki",
+      "average": 5.83,
+      "lowest_rating": 1.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Aryan"
+      ],
+      "ratings_count": 6
+    },
+    "74": {
+      "name": "Taro Sakamoto",
+      "average": 6.8,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Batman"
+      ],
+      "highest_rating": 7.0,
+      "highest_by": [
+        "Ayush",
+        "Oren",
+        "Namya",
+        "Pranjal"
+      ],
+      "ratings_count": 5
+    },
+    "75": {
+      "name": "Chika Kudo",
+      "average": 10.0,
+      "lowest_rating": 10.0,
+      "lowest_by": [
+        "Ayush",
+        "Oren",
+        "Asutosh",
+        "Krish"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Oren",
+        "Asutosh",
+        "Krish"
+      ],
+      "ratings_count": 4
+    },
+    "76": {
+      "name": "Yoichi Isagi",
+      "average": 7.43,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Himesh"
+      ],
+      "ratings_count": 7
+    },
+    "77": {
+      "name": "Sung Jinwoo",
+      "average": 4.58,
+      "lowest_rating": 1.0,
+      "lowest_by": [
+        "Vital",
+        "Psyco",
+        "Oren"
+      ],
+      "highest_rating": 7.0,
+      "highest_by": [
+        "Krish",
+        "Pranjal"
+      ],
+      "ratings_count": 12
+    },
+    "78": {
+      "name": "Akame",
+      "average": 7.5,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Ayush",
+        "Vital",
+        "Batman",
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Aryan"
+      ],
+      "ratings_count": 6
+    },
+    "79": {
+      "name": "Ash Ketchum",
+      "average": 9.07,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Hito"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Aryan",
+        "Batman",
+        "Jas",
+        "Likhit",
+        "Krish",
+        "Himesh",
+        "Prash",
+        "Pranjal"
+      ],
+      "ratings_count": 14
+    },
+    "80": {
+      "name": "Vash the Stampede",
+      "average": 9.0,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Hito"
+      ],
+      "ratings_count": 2
+    },
+    "81": {
+      "name": "Yusuke Urameshi",
+      "average": 7.0,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Oren",
+        "Namya"
+      ],
+      "highest_rating": 7.0,
+      "highest_by": [
+        "Oren",
+        "Namya"
+      ],
+      "ratings_count": 2
+    },
+    "82": {
+      "name": "Kanzo Hattori",
+      "average": 8.54,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Vital"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Aryan",
+        "Hito",
+        "Prash",
+        "Pranjal"
+      ],
+      "ratings_count": 13
+    },
+    "83": {
+      "name": "Doraemon",
+      "average": 9.53,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Amazing Ayush",
+        "Uv"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Aryan",
+        "Batman",
+        "Oren",
+        "Hito",
+        "Krish",
+        "Himesh",
+        "Nobody",
+        "Prash",
+        "Tirth",
+        "Pranjal"
+      ],
+      "ratings_count": 15
+    },
+    "84": {
+      "name": "Shinra Kusakabe",
+      "average": 8.0,
+      "lowest_rating": 5.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Aryan"
+      ],
+      "ratings_count": 5
+    },
+    "85": {
+      "name": "Yui Hirasawa",
+      "average": 10.0,
+      "lowest_rating": 10.0,
+      "lowest_by": [
+        "Ayush",
+        "Oren",
+        "Uv"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Oren",
+        "Uv"
+      ],
+      "ratings_count": 3
+    },
+    "86": {
+      "name": "Iori Kitahara",
+      "average": 9.8,
+      "lowest_rating": 9.0,
+      "lowest_by": [
+        "Uv"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Batman",
+        "Oren",
+        "Tirth"
+      ],
+      "ratings_count": 5
+    },
+    "87": {
+      "name": "Cid Kagenou",
+      "average": 6.8,
+      "lowest_rating": 4.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Krish"
+      ],
+      "ratings_count": 5
+    },
+    "88": {
+      "name": "Kusuo Saiki",
+      "average": 7.0,
+      "lowest_rating": 6.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 8.0,
+      "highest_by": [
+        "Ayush"
+      ],
+      "ratings_count": 3
+    },
+    "89": {
+      "name": "Yang Wen-Li",
+      "average": 9.57,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Ayush",
+        "Psyco",
+        "Aryan",
+        "Anvit",
+        "Mayank"
+      ],
+      "ratings_count": 7
+    },
+    "90": {
+      "name": "Artoria Pendragon",
+      "average": 8.5,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Batman"
+      ],
+      "ratings_count": 2
+    },
+    "91": {
+      "name": "Reinhard von Lohengramm",
+      "average": 9.71,
+      "lowest_rating": 9.0,
+      "lowest_by": [
+        "Ayush",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Psyco",
+        "Aryan",
+        "Oren",
+        "Anvit",
+        "Mayank"
+      ],
+      "ratings_count": 7
+    },
+    "92": {
+      "name": "Madoka Kamane",
+      "average": 9.0,
+      "lowest_rating": 9.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Oren"
+      ],
+      "ratings_count": 1
+    },
+    "93": {
+      "name": "Takopi",
+      "average": 7.5,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Vital",
+        "Psyco",
+        "Batman",
+        "Gherman",
+        "Himesh",
+        "Shubham",
+        "Pranjal"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Amazing Ayush"
+      ],
+      "ratings_count": 10
+    },
+    "94": {
+      "name": "Meliodas",
+      "average": 0.0,
+      "lowest_rating": 0.0,
+      "lowest_by": [],
+      "highest_rating": 0.0,
+      "highest_by": [],
+      "ratings_count": 0
+    },
+    "95": {
+      "name": "Seishuu Handa",
+      "average": 9.0,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Ayush"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Oren"
+      ],
+      "ratings_count": 5
+    },
+    "96": {
+      "name": "Kazuma Satou",
+      "average": 6.5,
+      "lowest_rating": 1.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Gherman"
+      ],
+      "ratings_count": 6
+    },
+    "97": {
+      "name": "Asta",
+      "average": 7.5,
+      "lowest_rating": 4.0,
+      "lowest_by": [
+        "Anvit"
+      ],
+      "highest_rating": 9.0,
+      "highest_by": [
+        "Aryan",
+        "Gherman",
+        "Namya"
+      ],
+      "ratings_count": 10
+    },
+    "98": {
+      "name": "Rei Kiriyama",
+      "average": 9.25,
+      "lowest_rating": 8.0,
+      "lowest_by": [
+        "Oren"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Monty",
+        "Himesh"
+      ],
+      "ratings_count": 4
+    },
+    "99": {
+      "name": "Gesicht",
+      "average": 9.17,
+      "lowest_rating": 9.0,
+      "lowest_by": [
+        "Ayush",
+        "Batman",
+        "Gherman",
+        "Prash",
+        "Shubham"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Oren"
+      ],
+      "ratings_count": 6
+    },
+    "100": {
+      "name": "Spike Spiegel",
+      "average": 8.6,
+      "lowest_rating": 7.0,
+      "lowest_by": [
+        "Batman"
+      ],
+      "highest_rating": 10.0,
+      "highest_by": [
+        "Oren"
+      ],
+      "ratings_count": 5
+    }
+  }
+}

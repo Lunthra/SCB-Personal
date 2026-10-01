@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "source": "SCB Wildcard Character List",
+  "wildcard_count": 51,
+  "characters": {
+    "1": {
+      "name": "Loid Forger"
+    },
+    "2": {
+      "name": "Senku Ishigami"
+    },
+    "3": {
+      "name": "Atsushi Nakajima"
+    },
+    "4": {
+      "name": "Decim"
+    },
+    "5": {
+      "name": "Houtarou Oreki"
+    },
+    "6": {
+      "name": "Akane Tsunemori"
+    },
+    "7": {
+      "name": "Kou Yamori"
+    },
+    "8": {
+      "name": "Li Shin / Ri Xin"
+    },
+    "9": {
+      "name": "Takashi Natsume"
+    },
+    "10": {
+      "name": "Kino"
+    },
+    "11": {
+      "name": "Sōma Yukihira"
+    },
+    "12": {
+      "name": "Lucy / Kaede"
+    },
+    "13": {
+      "name": "Ryūko Matoi"
+    },
+    "14": {
+      "name": "Tanya Degurechaff"
+    },
+    "15": {
+      "name": "Yū Otosaka"
+    },
+    "16": {
+      "name": "Yūichi Katagiri"
+    },
+    "17": {
+      "name": "Shinichi Kudo / Conan Edogawa"
+    },
+    "18": {
+      "name": "Kumiko Oumae"
+    },
+    "19": {
+      "name": "Mugen"
+    },
+    "20": {
+      "name": "Simon"
+    },
+    "21": {
+      "name": "Eikichi Onizuka"
+    },
+    "22": {
+      "name": "Maru"
+    },
+    "23": {
+      "name": "Kiruko"
+    },
+    "24": {
+      "name": "Nagi Umino"
+    },
+    "25": {
+      "name": "Ceil Phantomhive"
+    },
+    "26": {
+      "name": "Tomoya Okazaki"
+    },
+    "27": {
+      "name": "Tomo Aizawa"
+    },
+    "28": {
+      "name": "Akari Watanabe"
+    },
+    "29": {
+      "name": "Natsuko Hirose"
+    },
+    "30": {
+      "name": "Shinichi Izumi"
+    },
+    "31": {
+      "name": "Jin Mori"
+    },
+    "32": {
+      "name": "Emma"
+    },
+    "33": {
+      "name": "Kaiji Itō"
+    },
+    "34": {
+      "name": "Hiro"
+    },
+    "35": {
+      "name": "Shinei Nouzen"
+    },
+    "36": {
+      "name": "Kazuto Kirigaya"
+    },
+    "37": {
+      "name": "Sora"
+    },
+    "38": {
+      "name": "Ainz Ooal Gown"
+    },
+    "39": {
+      "name": "Mitsumi Iwakura"
+    },
+    "40": {
+      "name": "Banri Tada"
+    },
+    "41": {
+      "name": "Umaru Doma"
+    },
+    "42": {
+      "name": "Misaki Ayuzawa"
+    },
+    "43": {
+      "name": "Sawako Kuronuma"
+    },
+    "44": {
+      "name": "Kotarou Azumi"
+    },
+    "45": {
+      "name": "Akane Mizuno"
+    },
+    "46": {
+      "name": "Tohru Honda"
+    },
+    "47": {
+      "name": "Jinta Yadomi"
+    },
+    "48": {
+      "name": "Futaro Uesugi"
+    },
+    "49": {
+      "name": "Yuuko Aioi"
+    },
+    "50": {
+      "name": "Usagi Tsukino"
+    },
+    "51": {
+      "name": "Guts"
+    }
+  }
+}
